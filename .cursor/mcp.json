@@ -6,6 +6,15 @@
         "-y",
         "@mastra/mcp-docs-server@latest"
       ]
-    }
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_b62e7bfeff48e4227ab3fd1d45c93e3cbcb256dc"
+      ]
+    }  
   }
 }

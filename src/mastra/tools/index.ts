@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
 interface GeocodingResponse {
   results: {
@@ -19,6 +20,11 @@ interface WeatherResponse {
     weather_code: number;
   };
 }
+
+// Supabaseクライアントの初期化 (環境変数からURLとキーを取得するのがベストプラクティスです)
+const supabaseUrl = 'https://ujzwvakjxumqhdrdolpe.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqend2YWtqeHVtcWhkcmRvbHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzE0MjEsImV4cCI6MjA0ODQ0NzQyMX0.3tdmTW9GLLjVq2TY09mGKN-wlpIE2IN1NNXqAx-tdmI'; // 安全のため、実際には環境変数を使用してください
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const weatherTool = createTool({
   id: 'get-weather',
@@ -103,25 +109,49 @@ function getWeatherCondition(code: number): string {
 
 // Tools for Coaching
 export const saveCoachingDataTool = createTool({
-  id: 'save-choaging-data',
+  id: 'save-coaching-data',
   description: 'コーチングしたデータをDBに保存する',
   inputSchema: z.object({
     date: z.string().describe('コーチング日付'),
     type: z.string().describe('質問のタイプ。\'goal\' or \'reflection\''),
     question: z.string().describe('質問'),
-    answer: z.string().describe('City name'),
+    answer: z.string().describe('回答内容'),
   }),
   outputSchema: z.object({
     resultMessage: z.string(),
   }),
   execute: async ({ context }) => {
-    return await saveCoachingData(context.date, context.type, context.question, context.answer);
+    return await saveCoachingData(new Date().toISOString().split('T')[0], context.type, context.question, context.answer);
   },
 });
 
 const saveCoachingData = async (date: string, type: string, question: string, answer: string) => {
-  const resultMessage = `コーチングデータを保存しました。日付: ${date}, タイプ: ${type}, 質問: ${question}, 回答: ${answer}`;
-  return {
-    resultMessage: resultMessage,
-  };
+  try {
+    const { data, error } = await supabase
+      .from('coaching_records')
+      .insert([
+        { date, type, question, answer },
+      ])
+      .select(); // オプション: 挿入されたデータを返す場合
+
+    if (error) {
+      console.error('Error inserting data:', error);
+      return {
+        resultMessage: `データの保存中にエラーが発生しました: ${error.message}`,
+      };
+    }
+
+    console.log('Data inserted successfully:', data);
+    const resultMessage = `コーチングデータを保存しました。日付: ${date}, タイプ: ${type}, 質問: ${question}, 回答: ${answer}`;
+    return {
+      resultMessage: resultMessage,
+    };
+
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    const message = err instanceof Error ? err.message : '不明なエラー';
+    return {
+      resultMessage: `予期せぬエラーが発生しました: ${message}`,
+    };
+  }
 };

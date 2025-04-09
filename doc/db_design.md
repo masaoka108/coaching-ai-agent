@@ -62,3 +62,4 @@ SELECT * FROM coaching_records WHERE type = 'goal';
 SELECT * FROM coaching_records 
 WHERE date BETWEEN '2024-03-01' AND '2024-03-31';
 ``` 
+
