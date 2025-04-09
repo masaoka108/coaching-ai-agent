@@ -21,9 +21,15 @@ interface WeatherResponse {
   };
 }
 
-// Supabaseクライアントの初期化 (環境変数からURLとキーを取得するのがベストプラクティスです)
-const supabaseUrl = 'https://ujzwvakjxumqhdrdolpe.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqend2YWtqeHVtcWhkcmRvbHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzE0MjEsImV4cCI6MjA0ODQ0NzQyMX0.3tdmTW9GLLjVq2TY09mGKN-wlpIE2IN1NNXqAx-tdmI'; // 安全のため、実際には環境変数を使用してください
+// Supabaseクライアントの初期化 (環境変数からURLとキーを取得)
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+// 環境変数が設定されているか確認
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase URL (SUPABASE_URL) or Anon Key (SUPABASE_ANON_KEY) not found in environment variables.');
+}
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const weatherTool = createTool({
