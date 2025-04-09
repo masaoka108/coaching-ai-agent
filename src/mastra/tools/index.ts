@@ -100,3 +100,28 @@ function getWeatherCondition(code: number): string {
   };
   return conditions[code] || 'Unknown';
 }
+
+// Tools for Coaching
+export const saveCoachingDataTool = createTool({
+  id: 'save-choaging-data',
+  description: 'コーチングしたデータをDBに保存する',
+  inputSchema: z.object({
+    date: z.string().describe('コーチング日付'),
+    type: z.string().describe('質問のタイプ。\'goal\' or \'reflection\''),
+    question: z.string().describe('質問'),
+    answer: z.string().describe('City name'),
+  }),
+  outputSchema: z.object({
+    resultMessage: z.string(),
+  }),
+  execute: async ({ context }) => {
+    return await saveCoachingData(context.date, context.type, context.question, context.answer);
+  },
+});
+
+const saveCoachingData = async (date: string, type: string, question: string, answer: string) => {
+  const resultMessage = `コーチングデータを保存しました。日付: ${date}, タイプ: ${type}, 質問: ${question}, 回答: ${answer}`;
+  return {
+    resultMessage: resultMessage,
+  };
+};

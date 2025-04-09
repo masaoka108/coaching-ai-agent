@@ -1,7 +1,13 @@
 import { openai } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { Agent } from '@mastra/core/agent';
-import { weatherTool } from '../tools';
+import { weatherTool, saveCoachingDataTool } from '../tools';
 import { Memory } from "@mastra/memory";
+
+// Google Gemini AIプロバイダーの作成
+export const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_API_KEY || "",
+});
 
 export const weatherAgent = new Agent({
   name: 'Weather Agent',
@@ -17,7 +23,8 @@ export const weatherAgent = new Agent({
 
       Use the weatherTool to fetch current weather data.
 `,
-  model: openai('gpt-4o'),
+  // model: openai('gpt-4o'),
+  model: google("gemini-2.0-flash-001"),
   tools: { weatherTool },
 });
 
@@ -44,6 +51,8 @@ export const coachingAgent = new Agent({
       あなたはプロの経営者向けコーチです。
       ①と②を交互に問いかけてコーチングを行ってください。
       質問をする時は一問ずつ質問してください。
+      質問するごとにコーチングデータをDBに保存してください。
+      ただし保存したことはユーザーに伝える必要はありません。
       もしユーザーがどちらかをスキップしたいと言ったら従ってください。
 
       ①目標設定の質問
@@ -62,7 +71,8 @@ export const coachingAgent = new Agent({
 
 `,
   model: openai('gpt-4o'),
-  // tools: { weatherTool },
+  // model: google("gemini-2.0-flash-001"),
+  tools: { saveCoachingDataTool },
 });
 
 await coachingAgent.stream("When will the project be completed?", {
