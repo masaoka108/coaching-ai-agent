@@ -139,19 +139,22 @@ function App() {
         {showHistory ? (
           <HistoryView entries={entries} />
         ) : (
-          <div className="gradient-border glass-effect min-h-[600px] flex flex-col">
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-              {currentEntry?.messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              {isLoading && (
-                <div className="flex justify-center items-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-                </div>
-              )}
-            </div>
-            <div className="relative z-10">
-              <ChatInput onSend={handleSendMessage} />
+          <div className="relative p-[1px] rounded-lg bg-gradient-to-r from-blue-400 to-purple-500">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 opacity-30 blur-xl"></div>
+            <div className="relative glass-effect min-h-[600px] flex flex-col rounded-lg overflow-hidden">
+              <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                {currentEntry?.messages.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                {isLoading && (
+                  <div className="flex justify-center items-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+                  </div>
+                )}
+              </div>
+              <div className="relative z-10">
+                <ChatInput onSend={handleSendMessage} />
+              </div>
             </div>
           </div>
         )}
