@@ -32,6 +32,7 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { currentEntry, entries, setCurrentEntry, addEntry, updateEntry } = useStore();
+  const [hasShownInitialMessage, setHasShownInitialMessage] = useState(false);
 
   useEffect(() => {
     if (entries.length === 0) {
@@ -41,6 +42,25 @@ function App() {
       setCurrentEntry(entries[0]);
     }
   }, [currentEntry, entries.length, addEntry, setCurrentEntry]);
+
+  // 初期メッセージの表示を別のuseEffectで管理
+  useEffect(() => {
+    if (currentEntry && !hasShownInitialMessage && currentEntry.messages.length === 0) {
+      const initialMessage: Message = {
+        id: uuidv4(),
+        content: '今日は目標設定する？それとも振り返りをする？',
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+      };
+
+      const updatedEntry = {
+        ...currentEntry,
+        messages: [initialMessage],
+      };
+      updateEntry(updatedEntry);
+      setHasShownInitialMessage(true);
+    }
+  }, [currentEntry]); // currentEntryのみを依存配列に含める
 
   const handleSendMessage = async (content: string) => {
     if (!currentEntry) return;
@@ -137,7 +157,7 @@ function App() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         {showHistory ? (
-          <HistoryView entries={entries} />
+          <HistoryView />
         ) : (
           <div className="relative p-[1px] rounded-lg bg-gradient-to-r from-blue-400 to-purple-500">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 opacity-30 blur-xl"></div>
@@ -153,7 +173,7 @@ function App() {
                 )}
               </div>
               <div className="relative z-10">
-                <ChatInput onSend={handleSendMessage} />
+                <ChatInput onSend={handleSendMessage} initialMessage={false} />
               </div>
             </div>
           </div>
