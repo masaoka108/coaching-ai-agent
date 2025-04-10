@@ -7,6 +7,12 @@ import { HistoryView } from './components/HistoryView';
 import { useStore } from './store/useStore';
 import { Message, DailyEntry } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { MastraClient } from '@mastra/client-js';
+
+// Mastraクライアントの初期化
+const mastra = new MastraClient({
+  baseUrl: 'http://localhost:4111', // あなたのMastraサーバーのURLに変更してください
+});
 
 // サンプルデータを型付きで定義
 const sampleEntries: DailyEntry[] = [
@@ -54,11 +60,21 @@ function App() {
 
     setIsLoading(true);
     
-    // Simulate assistant response after delay
-    setTimeout(() => {
+    try {
+      // coachingAgentとの対話を開始
+      const agent = mastra.getAgent('coachingAgent');
+      const response = await agent.generate({
+        messages: [{
+          role: 'user',
+          content: content
+        }],
+        threadId: currentEntry.id,
+        resourceId: currentEntry.userId,
+      });
+
       const assistantMessage: Message = {
         id: uuidv4(),
-        content: 'ご質問ありがとうございます。どのようにお手伝いできますか？',
+        content: response.text,
         role: 'assistant',
         timestamp: new Date().toISOString(),
       };
@@ -68,8 +84,23 @@ function App() {
         messages: [...updatedEntry.messages, assistantMessage],
       };
       updateEntry(entryWithAssistantResponse);
+    } catch (error) {
+      console.error('Error communicating with coachingAgent:', error);
+      // エラーメッセージを表示
+      const errorMessage: Message = {
+        id: uuidv4(),
+        content: 'すみません、エラーが発生しました。もう一度お試しください。',
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+      };
+      const entryWithError = {
+        ...updatedEntry,
+        messages: [...updatedEntry.messages, errorMessage],
+      };
+      updateEntry(entryWithError);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

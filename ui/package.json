@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mastra/client-js": "latest",
+    "@mastra/client-js": "^0.1.16",
     "@supabase/supabase-js": "^2.39.7",
     "date-fns": "^3.3.1",
     "lucide-react": "^0.344.0",
