@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { format, parseISO, startOfDay } from 'date-fns';
-import { MessageCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { MessageCircle, ChevronRight, Loader2, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabaseクライアントの初期化
@@ -26,10 +26,74 @@ interface DailySummary {
   totalRecords: number;
 }
 
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  summary: DailySummary;
+}
+
+const DetailModal: React.FC<ModalProps> = ({ isOpen, onClose, summary }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="relative w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-gray-900 rounded-lg p-6 m-4">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <h2 className="text-xl font-semibold text-blue-300 mb-6">
+          {format(parseISO(summary.date), 'yyyy年MM月dd日')}の記録
+        </h2>
+
+        {/* 朝の目標設定 */}
+        {summary.morningGoals.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-blue-300 mb-4">朝の目標設定</h3>
+            <div className="space-y-4">
+              {summary.morningGoals.map((record) => (
+                <div key={record.id} className="bg-blue-500/10 rounded-lg p-4">
+                  <p className="text-sm font-medium text-blue-300 mb-2">{record.question}</p>
+                  <p className="text-sm text-gray-300">{record.answer}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {format(parseISO(record.created_at), 'HH:mm')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 夜の振り返り */}
+        {summary.eveningReflections.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium text-purple-300 mb-4">夜の振り返り</h3>
+            <div className="space-y-4">
+              {summary.eveningReflections.map((record) => (
+                <div key={record.id} className="bg-purple-500/10 rounded-lg p-4">
+                  <p className="text-sm font-medium text-purple-300 mb-2">{record.question}</p>
+                  <p className="text-sm text-gray-300">{record.answer}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {format(parseISO(record.created_at), 'HH:mm')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const HistoryView: React.FC = () => {
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSummary, setSelectedSummary] = useState<DailySummary | null>(null);
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -139,7 +203,7 @@ export const HistoryView: React.FC = () => {
             <div className="px-6 py-3 border-t border-gray-800">
               <button 
                 className="w-full flex items-center justify-center space-x-2 text-blue-400 hover:text-purple-400 transition-colors"
-                onClick={() => {/* TODO: 詳細表示の実装 */}}
+                onClick={() => setSelectedSummary(summary)}
               >
                 <span className="text-sm font-medium">詳細を見る</span>
                 <ChevronRight className="w-4 h-4" />
@@ -148,6 +212,12 @@ export const HistoryView: React.FC = () => {
           </div>
         </div>
       ))}
+
+      <DetailModal
+        isOpen={selectedSummary !== null}
+        onClose={() => setSelectedSummary(null)}
+        summary={selectedSummary!}
+      />
     </div>
   );
 }
