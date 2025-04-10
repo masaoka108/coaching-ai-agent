@@ -10,13 +10,13 @@ export const ChatInput: React.FC<Props> = ({ onSend }) => {
 
   const handleSend = () => {
     if (message.trim()) {
-      onSend(message);
+      onSend(message.trim());
       setMessage('');
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSend();
     }
