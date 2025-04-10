@@ -1,47 +1,24 @@
 import { create } from 'zustand';
-import { DailyEntry, Message, MorningAnswers, EveningAnswers } from '../types';
+import { DailyEntry } from '../types';
 
 interface State {
-  currentEntry: DailyEntry | null;
   entries: DailyEntry[];
-  setCurrentEntry: (entry: DailyEntry | null) => void;
+  currentEntry: DailyEntry | null;
   addEntry: (entry: DailyEntry) => void;
-  addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
-  updateMorningAnswers: (answers: MorningAnswers) => void;
-  updateEveningAnswers: (answers: EveningAnswers) => void;
+  setCurrentEntry: (entry: DailyEntry) => void;
+  updateEntry: (entry: DailyEntry) => void;
 }
 
 export const useStore = create<State>((set) => ({
-  currentEntry: null,
   entries: [],
-  setCurrentEntry: (entry) => set({ currentEntry: entry }),
+  currentEntry: null,
   addEntry: (entry) => set((state) => ({ entries: [...state.entries, entry] })),
-  addMessage: (message) =>
+  setCurrentEntry: (entry) => set({ currentEntry: entry }),
+  updateEntry: (updatedEntry) =>
     set((state) => ({
-      currentEntry: state.currentEntry
-        ? {
-            ...state.currentEntry,
-            messages: [
-              ...state.currentEntry.messages,
-              {
-                id: crypto.randomUUID(),
-                timestamp: new Date().toISOString(),
-                ...message,
-              },
-            ],
-          }
-        : null,
-    })),
-  updateMorningAnswers: (answers) =>
-    set((state) => ({
-      currentEntry: state.currentEntry
-        ? { ...state.currentEntry, morningAnswers: answers }
-        : null,
-    })),
-  updateEveningAnswers: (answers) =>
-    set((state) => ({
-      currentEntry: state.currentEntry
-        ? { ...state.currentEntry, eveningAnswers: answers }
-        : null,
+      entries: state.entries.map((entry) =>
+        entry.id === updatedEntry.id ? updatedEntry : entry
+      ),
+      currentEntry: state.currentEntry?.id === updatedEntry.id ? updatedEntry : state.currentEntry,
     })),
 }));

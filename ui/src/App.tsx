@@ -5,109 +5,70 @@ import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
 import { HistoryView } from './components/HistoryView';
 import { useStore } from './store/useStore';
+import { Message, DailyEntry } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
-// サンプルデータ
-const sampleEntries = [
+// サンプルデータを型付きで定義
+const sampleEntries: DailyEntry[] = [
   {
-    id: '1',
-    userId: 'test-user',
-    date: '2024-03-20',
-    morningAnswers: {
-      eveningGoal: '新規プロジェクトの要件定義を完了させる',
-      context: 'チームの期待を超える提案をする',
-      behaviors: '積極的なコミュニケーションと詳細な文書化',
-    },
-    eveningAnswers: {
-      focus: 'プロジェクトの要件定義',
-      behaviorDifferences: 'チームメンバーと密接に連携し、細かな要件まで確認した',
-      results: '予定通り要件定義書を完成させ、チームから高評価を得た',
-      successes: '全ステークホルダーの要望を適切に文書化できた',
-      challenges: '一部の要件で関係者間で認識の違いがあった',
-      improvements: 'より早い段階で認識合わせのミーティングを設定する',
-      reasoning: '過去のプロジェクトでも早期の認識合わせが成功につながっている',
-    },
-    messages: [
-      {
-        id: 'm1',
-        content: 'おはようございます！今日の目標を設定していきましょう。',
-        role: 'assistant',
-        timestamp: '2024-03-20T08:00:00Z',
-      },
-      {
-        id: 'm2',
-        content: '新規プロジェクトの要件定義を完了させたいと思います。',
-        role: 'user',
-        timestamp: '2024-03-20T08:01:00Z',
-      },
-    ],
-    createdAt: '2024-03-20T08:00:00Z',
-    updatedAt: '2024-03-20T20:00:00Z',
-  },
-  {
-    id: '2',
-    userId: 'test-user',
-    date: '2024-03-19',
-    morningAnswers: {
-      eveningGoal: 'チーム全体のモチベーションを高める施策を考案する',
-      context: '全員が主体的に参加できる環境作り',
-      behaviors: '1on1の実施と、チーム会議での積極的な意見収集',
-    },
-    eveningAnswers: {
-      focus: 'チームビルディング',
-      behaviorDifferences: '全メンバーと個別に時間を取って話し合った',
-      results: '新しいチーム活動の提案をまとめることができた',
-      successes: 'メンバーから多くの建設的な意見を得られた',
-      challenges: '時間管理が難しかった',
-      improvements: 'ミーティングの時間配分を事前に決めておく',
-      reasoning: '構造化された時間管理が以前から課題だった',
-    },
-    messages: [
-      {
-        id: 'm3',
-        content: 'チームのモチベーション向上について、具体的にどんなアプローチを考えていますか？',
-        role: 'assistant',
-        timestamp: '2024-03-19T09:00:00Z',
-      },
-      {
-        id: 'm4',
-        content: '定期的な1on1とチーム会議での意見交換を中心に考えています。',
-        role: 'user',
-        timestamp: '2024-03-19T09:01:00Z',
-      },
-    ],
-    createdAt: '2024-03-19T09:00:00Z',
-    updatedAt: '2024-03-19T21:00:00Z',
+    id: uuidv4(),
+    userId: 'user123',
+    date: new Date().toISOString(),
+    morningAnswers: null,
+    eveningAnswers: null,
+    messages: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];
 
 function App() {
   const [showHistory, setShowHistory] = useState(false);
-  const { currentEntry, entries, setCurrentEntry, addMessage, addEntry } = useStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const { currentEntry, entries, setCurrentEntry, addEntry, updateEntry } = useStore();
 
   useEffect(() => {
-    sampleEntries.forEach(entry => addEntry(entry));
-
-    if (!currentEntry) {
-      setCurrentEntry({
-        id: crypto.randomUUID(),
-        userId: 'test-user',
-        date: format(new Date(), 'yyyy-MM-dd'),
-        morningAnswers: null,
-        eveningAnswers: null,
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+    if (entries.length === 0) {
+      sampleEntries.forEach(entry => addEntry(entry));
     }
-  }, []);
+    if (!currentEntry && entries.length > 0) {
+      setCurrentEntry(entries[0]);
+    }
+  }, [currentEntry, entries.length, addEntry, setCurrentEntry]);
 
-  const handleSendMessage = (content: string) => {
-    addMessage({ content, role: 'user' });
+  const handleSendMessage = async (content: string) => {
+    if (!currentEntry) return;
+
+    const userMessage: Message = {
+      id: uuidv4(),
+      content,
+      role: 'user',
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedEntry = {
+      ...currentEntry,
+      messages: [...currentEntry.messages, userMessage],
+    };
+    updateEntry(updatedEntry);
+
+    setIsLoading(true);
+    
+    // Simulate assistant response after delay
     setTimeout(() => {
-      addMessage({
-        content: '申し訳ありません。現在AIアシスタントは実装中です。',
+      const assistantMessage: Message = {
+        id: uuidv4(),
+        content: 'ご質問ありがとうございます。どのようにお手伝いできますか？',
         role: 'assistant',
-      });
+        timestamp: new Date().toISOString(),
+      };
+
+      const entryWithAssistantResponse = {
+        ...updatedEntry,
+        messages: [...updatedEntry.messages, assistantMessage],
+      };
+      updateEntry(entryWithAssistantResponse);
+      setIsLoading(false);
     }, 1000);
   };
 
@@ -152,8 +113,15 @@ function App() {
               {currentEntry?.messages.map((message) => (
                 <ChatMessage key={message.id} message={message} />
               ))}
+              {isLoading && (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+                </div>
+              )}
             </div>
-            <ChatInput onSend={handleSendMessage} />
+            <div className="relative z-10">
+              <ChatInput onSend={handleSendMessage} />
+            </div>
           </div>
         )}
       </main>
