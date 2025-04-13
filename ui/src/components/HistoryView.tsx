@@ -120,9 +120,9 @@ export const HistoryView: React.FC = () => {
 
         if (error) throw error;
 
-        // 日本時間で日付ごとにレコードをグループ化
+        // 日本時間で日付ごとにレコードをグループ化（created_atを基準）
         const groupedRecords = data.reduce<Record<string, CoachingRecord[]>>((acc, record) => {
-          const dateKey = startOfDayJST(parseISO(record.date));
+          const dateKey = startOfDayJST(parseISO(record.created_at));
           if (!acc[dateKey]) {
             acc[dateKey] = [];
           }
