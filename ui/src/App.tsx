@@ -4,6 +4,7 @@ import { Calendar, MessageSquare, History } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
 import { HistoryView } from './components/HistoryView';
+import { CoachSelection } from './components/CoachSelection';
 import { useStore } from './store/useStore';
 import { Message, DailyEntry } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,6 +34,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const { currentEntry, entries, setCurrentEntry, addEntry, updateEntry } = useStore();
   const [hasShownInitialMessage, setHasShownInitialMessage] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<string | null>(null);
 
   useEffect(() => {
     if (entries.length === 0) {
@@ -123,15 +125,48 @@ function App() {
     }
   };
 
+  const handleSelectCoach = (coachId: string) => {
+    setSelectedCoach(coachId);
+  };
+
+  // コーチが選択されていない場合はコーチ選択画面を表示
+  if (!selectedCoach) {
+    return (
+      <div className="min-h-screen">
+        <header className="glass-effect">
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                  Coaching AI Agent
+                </h1>
+              </div>
+              <div className="flex items-center space-x-4 text-blue-300">
+                <Calendar className="w-6 h-6" />
+                <span>{format(new Date(), 'yyyy年MM月dd日')}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="py-8">
+          <CoachSelection onSelectCoach={handleSelectCoach} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <header className="glass-effect">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                Dairy Coaching AI Agent
-              </h1>
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                  Coaching AI Agent
+                </h1>
+              </div>
               <button
                 onClick={() => setShowHistory(!showHistory)}
                 className={`p-2 rounded-lg transition-all duration-300 ${
