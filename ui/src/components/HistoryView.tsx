@@ -1,13 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { format, parseISO, startOfDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { MessageCircle, ChevronRight, Loader2, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { toZonedTime } from 'date-fns-tz';
 
 // Supabaseクライアントの初期化
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
+
+// 日本のタイムゾーン
+const JST_TIMEZONE = 'Asia/Tokyo';
+
+// 日本時間の日付の始まりを取得する関数
+const startOfDayJST = (date: Date): string => {
+  const zonedDate = toZonedTime(date, JST_TIMEZONE);
+  return new Date(Date.UTC(
+    zonedDate.getFullYear(),
+    zonedDate.getMonth(),
+    zonedDate.getDate(),
+    0, 0, 0
+  )).toISOString();
+};
 
 interface CoachingRecord {
   id: number;
@@ -105,9 +120,9 @@ export const HistoryView: React.FC = () => {
 
         if (error) throw error;
 
-        // 日付ごとにレコードをグループ化
+        // 日本時間で日付ごとにレコードをグループ化
         const groupedRecords = data.reduce<Record<string, CoachingRecord[]>>((acc, record) => {
-          const dateKey = startOfDay(parseISO(record.date)).toISOString();
+          const dateKey = startOfDayJST(parseISO(record.date));
           if (!acc[dateKey]) {
             acc[dateKey] = [];
           }
