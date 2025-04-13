@@ -3,10 +3,43 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { Agent } from '@mastra/core/agent';
 import { weatherTool, saveCoachingDataTool } from '../tools';
 import { Memory } from "@mastra/memory";
+import { MCPConfiguration } from "@mastra/mcp";
 
 // Google Gemini AIプロバイダーの作成
 export const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY || "",
+});
+
+const mcp = new MCPConfiguration({
+  servers: {
+    // "supabase": {
+    //   "command": "npx",
+    //   "args": [
+    //     "-y",
+    //     "@supabase/mcp-server-supabase@latest",
+    //     "--access-token",
+    //     "sbp_b62e7bfeff48e4227ab3fd1d45c93e3cbcb256dc"
+    //   ]
+    // },
+
+    // // stdio example
+    // sequential: {
+    //   name: "sequential-thinking",
+    //   server: {
+    //     command: "npx",
+    //     args: ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+    //   },
+    // },
+    // // SSE example
+    // weather: {
+    //   url: new URL("http://localhost:8080/sse"),
+    //   requestInit: {
+    //     headers: {
+    //       Authorization: "Bearer your-token",
+    //     },
+    //   },
+    // },
+  },
 });
 
 export const weatherAgent = new Agent({
@@ -43,6 +76,9 @@ const memory = new Memory({
   },
 });
       
+// Get the current toolsets configured for this user
+const toolsets = await mcp.getToolsets();
+
 
 export const coachingAgent = new Agent({
   memory,
@@ -72,10 +108,18 @@ export const coachingAgent = new Agent({
 `,
   model: openai('gpt-4o'),
   // model: google("gemini-2.0-flash-001"),
-  tools: { saveCoachingDataTool },
+  // tools: { saveCoachingDataTool, },
+  tools: {
+   //...await mcp.getTools(),
+    saveCoachingDataTool,
+  }
 });
 
-await coachingAgent.stream("When will the project be completed?", {
-  threadId: "project_123",
-  resourceId: "user_123",
-});
+
+await coachingAgent.stream("When will the project be completed?", 
+  {
+    threadId: "project_123",
+    resourceId: "user_123",
+    //toolsets,
+  }
+);
